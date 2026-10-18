@@ -1,0 +1,65 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+    model User {
+       id           String    @id @default(cuid())
+       name         String?
+       email        String    @unique
+       passwordHash String?
+       role         Role      @default(USER)
+       createdAt    DateTime  @default(now())
+       updatedAt    DateTime  @updatedAt
+       tasks        Task[]
+       subjects     Subject[]
+     }
+
+   enum Role {
+     ADMIN
+     STAFF
+     USER
+   }
+
+     model Subject {
+       id        Int      @id @default(autoincrement())
+       name      String
+       userId    String
+       user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+       tasks     Task[]
+       createdAt DateTime @default(now())
+
+       @@unique([userId, name])
+     }
+
+     model Task {
+       id             Int        @id @default(autoincrement())
+       title          String
+       description    String?
+       dueDate        DateTime
+       status         TaskStatus @default(TODO)
+       reminderSentAt DateTime?
+       userId         String
+       user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+       subjectId      Int
+       subject        Subject    @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+       createdAt      DateTime   @default(now())
+       updatedAt      DateTime   @updatedAt
+
+       @@index([userId])
+       @@index([subjectId])
+     }
+
+     enum TaskStatus {
+       TODO
+       DONE
+     }
